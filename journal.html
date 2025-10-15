@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Journal Entries | synTAX Accounting</title>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* Glassy Modern Styling */
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(12px);
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .sidebar h2 {
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #1565c0;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar li {
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin: 4px 0;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .sidebar li:hover,
+    .sidebar li.active {
+      background: rgba(21, 101, 192, 0.15);
+      color: #1565c0;
+      font-weight: 500;
+    }
+
+    .main {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      color: #0d47a1;
+    }
+
+    /* Journal Form */
+    .card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 25px;
+    }
+
+    .card h3 {
+      margin-bottom: 10px;
+      color: #1565c0;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 15px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      background: rgba(255, 255, 255, 0.7);
+      outline: none;
+      transition: 0.3s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #1976d2;
+      box-shadow: 0 0 6px rgba(25, 118, 210, 0.4);
+    }
+
+    button {
+      padding: 10px 16px;
+      background: #1976d2;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #0d47a1;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+      background: rgba(21, 101, 192, 0.1);
+      color: #1565c0;
+    }
+
+    td button {
+      background: #ef5350;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    td button:hover {
+      background: #d32f2f;
+    }
+
+    /* Undo/Redo Buttons */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .toolbar button {
+      background: #64b5f6;
+    }
+
+    .toolbar button:hover {
+      background: #42a5f5;
+    }
+
+    /* Chart Section */
+    .chart-section {
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    }
+
+    canvas {
+      width: 100% !important;
+      max-height: 300px;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div>
+        <h2>synTAX</h2>
+        <ul>
+          <li onclick="location.href='index.html'">🏠 Dashboard</li>
+          <li class="active">📘 Journal</li>
+          <li onclick="location.href='accounts.html'">💼 Accounts</li>
+          <li onclick="location.href='ledger.html'">📊 Ledger</li>
+          <li onclick="location.href='reports.html'">📑 Reports</li>
+        </ul>
+      </div>
+      <div>
+        <label style="font-size: 13px;">
+          <input type="checkbox" id="themeSwitch" /> Dark Mode
+        </label>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+      <div class="header">
+        <h1>Journal Entries</h1>
+        <div class="toolbar">
+          <button id="undoBtn">Undo</button>
+          <button id="redoBtn">Redo</button>
+        </div>
+      </div>
+
+      <!-- Journal Form -->
+      <div class="card">
+        <h3>Add Journal Entry</h3>
+        <form id="journalForm">
+          <input type="date" id="jDate" required />
+          <input type="text" id="jDesc" placeholder="Description" required />
+          <input type="text" id="jDebit" placeholder="Debit Account" required />
+          <input type="text" id="jCredit" placeholder="Credit Account" required />
+          <input type="number" id="jAmount" placeholder="Amount" required />
+          <button type="submit">Add Entry</button>
+        </form>
+      </div>
+
+      <!-- Journal Table -->
+      <div class="card">
+        <h3>Journal Records</h3>
+        <table id="journalTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Debit</th>
+              <th>Credit</th>
+              <th>Amount</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Graphs -->
+      <div class="chart-section">
+        <h3>Journal Insights</h3>
+        <canvas id="cashFlowChart"></canvas>
+        <canvas id="incomeExpenseChart" style="margin-top: 20px;"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

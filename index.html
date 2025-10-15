@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>synTAX Accounting</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Styles & Libraries -->
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="layout">
+
+    <!-- 🌙 Sidebar -->
+    <aside class="sidebar glassy">
+      <h2>
+        <img src="syntax.png" width="200" height="74" alt="synTAX Logo">
+      </h2>
+
+      <input type="text" id="search" placeholder="Search...">
+
+      <ul>
+        <li data-section="dashboard" class="active">Dashboard</li>
+        <li data-section="chart">Chart of Accounts</li>
+        <li data-section="journal">Journals</li>
+        <li data-section="ledger">Ledgers</li>
+        <li data-section="modules">Modules</li>
+        <li data-section="reports">Reports</li>
+        <li data-section="contacts">Contacts</li>
+        <li data-section="settings">Settings</li>
+      </ul>
+    </aside>
+
+    <!-- 🧾 Main Content -->
+    <main class="content">
+
+      <!-- ========== DASHBOARD ========== -->
+      <section id="dashboard" class="section active">
+        <h1>Dashboard</h1>
+        <div class="cards">
+          <div class="card glassy">
+            <h3>💰 Cash Balance</h3>
+            <p id="cashBalance">₱0.00</p>
+          </div>
+          <div class="card glassy">
+            <h3>📈 Total Income</h3>
+            <p id="totalIncome">₱0.00</p>
+          </div>
+          <div class="card glassy">
+            <h3>📉 Total Expenses</h3>
+            <p id="totalExpenses">₱0.00</p>
+          </div>
+          <div class="card glassy">
+            <h3>📊 Net Profit/Loss</h3>
+            <p id="netProfit">₱0.00</p>
+          </div>
+        </div>
+
+        <!-- Graphs -->
+        <div class="dashboard-graphs">
+          <h3>Financial Overview</h3>
+          <div class="graph-cards">
+            <div class="graph-card glassy">
+              <h4>Cash Inflows vs Outflows</h4>
+              <canvas id="cashFlowChart" height="120"></canvas>
+            </div>
+            <div class="graph-card glassy">
+              <h4>Income vs Expense Trend</h4>
+              <canvas id="incomeExpenseChart" height="120"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== CHART OF ACCOUNTS ========== -->
+      <section id="chart" class="section">
+        <h1>Chart of Accounts</h1>
+        <form id="accountForm">
+          <input type="text" id="accName" placeholder="Account Name" required>
+          <select id="accType">
+            <option>Asset</option>
+            <option>Liability</option>
+            <option>Equity</option>
+            <option>Revenue</option>
+            <option>Expense</option>
+          </select>
+          <button type="submit">Add Account</button>
+        </form>
+
+        <table id="accountsTable">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- ========== JOURNALS ========== -->
+      <section id="journal" class="section">
+        <h1>Journal Entries</h1>
+
+        <form id="journalForm" class="form">
+          <input type="date" id="jDate" required>
+          <input type="text" id="jDesc" placeholder="Description" required>
+          <input type="text" id="jDebit" placeholder="Debit Account" required>
+          <input type="text" id="jCredit" placeholder="Credit Account" required>
+          <input type="number" id="jAmount" placeholder="Amount" required>
+          <button type="submit">Add Entry</button>
+        </form>
+
+        <div class="toolbar">
+          <button id="undoBtn">Undo</button>
+          <button id="redoBtn">Redo</button>
+        </div>
+
+        <table id="journalTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Debit</th>
+              <th>Credit</th>
+              <th>Amount</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- ========== LEDGERS ========== -->
+      <section id="ledger" class="section">
+        <h1>Ledgers</h1>
+        <div id="generalLedger">
+          <p>No ledger data yet. Add journal entries to populate.</p>
+        </div>
+      </section>
+
+      <!-- ========== MODULES ========== -->
+      <section id="modules" class="section">
+        <h1>Modules</h1>
+
+        <h2>Accounts Receivable</h2>
+        <table id="arTable">
+          <thead><tr><th>Customer</th><th>Amount</th></tr></thead>
+          <tbody></tbody>
+        </table>
+
+        <h2>Accounts Payable</h2>
+        <table id="apTable">
+          <thead><tr><th>Supplier</th><th>Amount</th></tr></thead>
+          <tbody></tbody>
+        </table>
+
+        <h2>Inventory</h2>
+        <table id="invTable">
+          <thead><tr><th>Item</th><th>In</th><th>Out</th><th>Balance</th></tr></thead>
+          <tbody></tbody>
+        </table>
+
+        <h2>Payroll</h2>
+        <table id="payrollTable">
+          <thead><tr><th>Employee</th><th>Net Pay</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- ========== REPORTS ========== -->
+      <section id="reports" class="section">
+        <h1>Financial Reports</h1>
+        <div id="trialBalance"></div>
+        <div id="incomeStatement"></div>
+        <div id="balanceSheet"></div>
+      </section>
+
+      <!-- ========== CONTACTS ========== -->
+      <section id="contacts" class="section">
+        <h1>Contacts</h1>
+        <form id="contactForm">
+          <input type="text" id="cName" placeholder="Name" required>
+          <input type="text" id="cType" placeholder="Type (Customer/Supplier)" required>
+          <input type="email" id="cEmail" placeholder="Email">
+          <button type="submit">Add Contact</button>
+        </form>
+
+        <table id="contactTable">
+          <thead><tr><th>Name</th><th>Type</th><th>Email</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- ========== SETTINGS ========== -->
+      <section id="settings" class="section">
+        <h1>Settings & User Management</h1>
+        <div class="settings-container">
+          <button onclick="backupData()">Backup Data</button>
+          <button onclick="restoreData()">Restore Data</button>
+          <button onclick="localStorage.clear(); location.reload()">Reset All Data</button>
+
+          <div class="theme-toggle">
+            <label><input type="checkbox" id="themeSwitch"> Dark Mode</label>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+<button id="toggleTheme">🌙 Dark Mode</button>
+
+  <!-- JS -->
+  <script src="app.js"></script>
+</body>
+</html>

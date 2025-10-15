@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transactions | synTAX Accounting</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2>synTAX</h2>
+      <input type="text" placeholder="🔍 Search..." id="searchInput">
+      <ul>
+        <li onclick="navigate('dashboard.html')">Dashboard</li>
+        <li onclick="navigate('chart.html')">Chart of Accounts</li>
+        <li class="active" onclick="navigate('transactions.html')">Transactions</li>
+        <li onclick="navigate('journal.html')">Journal</li>
+        <li onclick="navigate('reports.html')">Reports</li>
+        <li onclick="navigate('settings.html')">Settings</li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <h1>Transactions</h1>
+      <p class="subtitle">Record, edit, and monitor your financial transactions.</p>
+
+      <!-- Summary Cards -->
+      <div class="cards">
+        <div class="card glass">
+          <h3>Total Cash Inflows</h3>
+          <p id="cashInflow">₱0.00</p>
+        </div>
+        <div class="card glass">
+          <h3>Total Cash Outflows</h3>
+          <p id="cashOutflow">₱0.00</p>
+        </div>
+        <div class="card glass">
+          <h3>Net Cash Position</h3>
+          <p id="netCash">₱0.00</p>
+        </div>
+      </div>
+
+      <!-- Transaction Entry Form -->
+      <form id="transactionForm">
+        <h3>Add New Transaction</h3>
+        <div class="form-grid">
+          <input type="date" id="transDate" required>
+          <input type="text" id="transDesc" placeholder="Description" required>
+          <select id="transType" required>
+            <option value="">Select Type</option>
+            <option value="inflow">Cash Inflow</option>
+            <option value="outflow">Cash Outflow</option>
+          </select>
+          <input type="number" id="transAmount" placeholder="Amount" required>
+          <select id="transAccount" required>
+            <option value="">Account</option>
+            <option value="Sales">Sales</option>
+            <option value="Purchases">Purchases</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Salaries">Salaries</option>
+          </select>
+          <button type="submit">Add Transaction</button>
+        </div>
+      </form>
+
+      <!-- Transaction Table -->
+      <section class="transactions-table">
+        <h3>Transaction History</h3>
+        <div class="toolbar">
+          <button onclick="undoTransaction()">Undo</button>
+          <button onclick="redoTransaction()">Redo</button>
+          <button onclick="clearTransactions()">Clear All</button>
+        </div>
+        <table id="transactionTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Account</th>
+              <th>Amount</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Transactions dynamically appear here -->
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Graph Section -->
+      <section class="graphs">
+        <h3>Cash Flow Overview</h3>
+        <canvas id="cashFlowChart" height="120"></canvas>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function navigate(page) {
+      window.location.href = page;
+    }
+
+    const form = document.getElementById('transactionForm');
+    const tableBody = document.querySelector('#transactionTable tbody');
+    const inflowElem = document.getElementById('cashInflow');
+    const outflowElem = document.getElementById('cashOutflow');
+    const netElem = document.getElementById('netCash');
+
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    let history = [];
+    let redoStack = [];
+
+    function updateDashboard() {
+      let inflow = transactions.filter(t => t.type === 'inflow').reduce((a, b) => a + b.amount, 0);
+      let outflow = transactions.filter(t => t.type === 'outflow').reduce((a, b) => a + b.amount, 0);
+      inflowElem.textContent = `₱${inflow.toLocaleString()}`;
+      outflowElem.textContent = `₱${outflow.toLocaleString()}`;
+      netElem.textContent = `₱${(inflow - outflow).toLocaleString()}`;
+    }
+
+    function renderTransactions() {
+      tableBody.innerHTML = '';
+      transactions.forEach((t, i) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${t.date}</td>
+          <td>${t.description}</td>
+          <td>${t.type}</td>
+          <td>${t.account}</td>
+          <td>₱${t.amount.toLocaleString()}</td>
+          <td><button onclick="deleteTransaction(${i})">🗑️</button></td>
+        `;
+        tableBody.appendChild(row);
+      });
+      updateDashboard();
+      updateChart();
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+
+    function deleteTransaction(index) {
+      history.push([...transactions]);
+      redoStack = [];
+      transactions.splice(index, 1);
+      renderTransactions();
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const newTransaction = {
+        date: transDate.value,
+        description: transDesc.value,
+        type: transType.value,
+        account: transAccount.value,
+        amount: parseFloat(transAmount.value)
+      };
+      history.push([...transactions]);
+      redoStack = [];
+      transactions.push(newTransaction);
+      form.reset();
+      renderTransactions();
+    });
+
+    function undoTransaction() {
+      if (history.length > 0) {
+        redoStack.push([...transactions]);
+        transactions = history.pop();
+        renderTransactions();
+      }
+    }
+
+    function redoTransaction() {
+      if (redoStack.length > 0) {
+        history.push([...transactions]);
+        transactions = redoStack.pop();
+        renderTransactions();
+      }
+    }
+
+    function clearTransactions() {
+      if (confirm("Are you sure you want to clear all transactions?")) {
+        history.push([...transactions]);
+        redoStack = [];
+        transactions = [];
+        renderTransactions();
+      }
+    }
+
+    // Chart.js Graph
+    let ctx = document.getElementById('cashFlowChart').getContext('2d');
+    let cashChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Inflows',
+            backgroundColor: 'rgba(0, 150, 255, 0.5)',
+            data: []
+          },
+          {
+            label: 'Outflows',
+            backgroundColor: 'rgba(255, 50, 50, 0.5)',
+            data: []
+          }
+        ]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    function updateChart() {
+      const inflows = {};
+      const outflows = {};
+
+      transactions.forEach(t => {
+        const month = t.date.slice(0, 7);
+        if (t.type === 'inflow') inflows[month] = (inflows[month] || 0) + t.amount;
+        else outflows[month] = (outflows[month] || 0) + t.amount;
+      });
+
+      const labels = [...new Set([...Object.keys(inflows), ...Object.keys(outflows)])];
+      cashChart.data.labels = labels;
+      cashChart.data.datasets[0].data = labels.map(m => inflows[m] || 0);
+      cashChart.data.datasets[1].data = labels.map(m => outflows[m] || 0);
+      cashChart.update();
+    }
+
+    renderTransactions();
+  </script>
+</body>
+</html>
