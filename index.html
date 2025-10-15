@@ -203,17 +203,23 @@
           <button onclick="backupData()">Backup Data</button>
           <button onclick="restoreData()">Restore Data</button>
           <button onclick="localStorage.clear(); location.reload()">Reset All Data</button>
-          <button id="toggleTheme">🌙 Dark Mode</button>
+         <div class="theme-toggle">
+            <label><input type="checkbox" id="themeSwitch"> Dark Mode</label>
+          </div>
         </div>
       </section>
 
     </main>
   </div>
 
+<button id="toggleTheme">🌙 Dark Mode</button>
+
   <!-- JS -->
   <script src="app.js"></script>
 </body>
 </html>
+
+
 
 
 
