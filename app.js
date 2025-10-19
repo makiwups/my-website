@@ -845,3 +845,103 @@ function generateReports() {
   generateIncomeStatement(balances);
   generateBalanceSheet(balances);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const addEntryBtn = document.getElementById("addEntryBtn");
+  const deleteEntryBtn = document.getElementById("deleteEntryBtn");
+  const modal = document.getElementById("journalModal");
+  const closeModal = document.getElementById("closeModal");
+  const saveBtn = document.getElementById("saveEntry");
+  const journalBody = document.getElementById("journalBody");
+  const journalTable = document.getElementById("journalTable");
+
+  let deleteMode = false;
+  let entryCount = 0;
+
+  // 🧩 Add Entry
+  addEntryBtn.addEventListener("click", () => {
+    modal.classList.add("show");
+  });
+
+  // 🧩 Close Modal
+  closeModal.addEventListener("click", () => {
+    modal.classList.remove("show");
+  });
+
+  // 🧩 Save New Journal Entry
+  saveBtn.addEventListener("click", () => {
+    const entryType = document.getElementById("entryType").value;
+    const seriesCode = document.getElementById("seriesCode").value;
+    const company = document.getElementById("companyName").value;
+    const postingDate = document.getElementById("postingDate").value;
+    const rows = document.querySelectorAll("#addJournalTable tbody tr");
+
+    rows.forEach(row => {
+      const account = row.querySelector(".accountSelect").value;
+      const partyType = row.querySelector(".partyType").value;
+      const party = row.querySelector(".party").value;
+      const debit = row.querySelector(".debit").value;
+      const credit = row.querySelector(".credit").value;
+
+      entryCount++;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input type="checkbox"></td>
+        <td>${entryCount}</td>
+        <td>${account}</td>
+        <td>${partyType}</td>
+        <td>${party}</td>
+        <td>${debit}</td>
+        <td>${credit}</td>
+        <td><button class="edit-btn">✏️</button></td>
+      `;
+      journalBody.appendChild(tr);
+    });
+
+    modal.classList.remove("show");
+  });
+
+  // 🧩 Delete Mode Toggle
+  deleteEntryBtn.addEventListener("click", () => {
+    deleteMode = !deleteMode;
+    journalTable.classList.toggle("show-checkboxes");
+
+    if (!deleteMode) {
+      // When exiting delete mode, remove selected rows
+      const checked = document.querySelectorAll("#journalTable input[type='checkbox']:checked");
+      checked.forEach(chk => chk.closest("tr").remove());
+    }
+  });
+
+  // 🧩 Populate Account Dropdowns
+  const accounts = [
+    "Cash","Petty Cash","Cash in Bank","Accounts Receivable","Notes Receivable",
+    "Allowance for Doubtful Accounts","Inventory","Prepaid Expenses","Short-term Investments","Accrued Income",
+    "Land","Building","Accumulated Depreciation – Building","Office Equipment",
+    "Accumulated Depreciation – Equipment","Furniture and Fixtures","Vehicles",
+    "Accumulated Depreciation – Vehicles","Goodwill","Patents",
+    "Accounts Payable","Notes Payable","Accrued Expenses","Salaries Payable",
+    "Interest Payable","Taxes Payable","Unearned Revenue","Bonds Payable",
+    "Mortgage Payable","Deferred Tax Liabilities","Pension Liabilities",
+    "Capital","Drawing","Retained Earnings","Additional Paid-in Capital",
+    "Treasury Stock","Revaluation Surplus",
+    "Sales","Sales Returns and Allowances","Sales Discounts","Service Revenue",
+    "Interest Income","Rent Income","Commission Income","Other Income",
+    "Cost of Goods Sold","Salaries and Wages Expense","Rent Expense",
+    "Utilities Expense","Supplies Expense","Depreciation Expense","Insurance Expense",
+    "Advertising Expense","Repairs and Maintenance Expense","Delivery Expense",
+    "Taxes and Licenses","Miscellaneous Expense","Purchase",
+    "Purchase Returns and Allowances","Purchase Discount",
+    "Interest Expense","Loss on Disposal of Assets","Bad Debts Expense"
+  ];
+
+  document.querySelectorAll(".accountSelect").forEach(select => {
+    accounts.forEach(acc => {
+      const option = document.createElement("option");
+      option.value = acc;
+      option.textContent = acc;
+      select.appendChild(option);
+    });
+  });
+});
+
