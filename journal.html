@@ -234,18 +234,29 @@
         </div>
       </div>
 
-      <!-- Journal Form -->
-      <div class="card">
-        <h3>Add Journal Entry</h3>
-        <form id="journalForm">
-          <input type="date" id="jDate" required />
-          <input type="text" id="jDesc" placeholder="Description" required />
-          <input type="text" id="jDebit" placeholder="Debit Account" required />
-          <input type="text" id="jCredit" placeholder="Credit Account" required />
-          <input type="number" id="jAmount" placeholder="Amount" required />
-          <button type="submit">Add Entry</button>
-        </form>
-      </div>
+     <div class="journal-actions">
+  <button id="addEntryBtn" class="btn">Add Entry</button>
+  <button id="deleteEntryBtn" class="btn delete">Delete Entry</button>
+</div>
+
+<table id="journalTable">
+  <thead>
+    <tr>
+      <th class="selectCol"></th>
+      <th>No.</th>
+      <th>Account</th>
+      <th>Party Type</th>
+      <th>Party</th>
+      <th>Debit</th>
+      <th>Credit</th>
+      <th>Edit</th>
+    </tr>
+  </thead>
+  <tbody id="journalBody">
+    <!-- Entries will be inserted here dynamically -->
+  </tbody>
+</table>
+
 
       <!-- Journal Table -->
       <div class="card">
@@ -276,4 +287,5 @@
 
   <script src="app.js"></script>
 </body>
+
 </html>
