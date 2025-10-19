@@ -292,7 +292,58 @@ body.dark {
   width: 8px;
 }
 
+/* Journal Actions */
+.journal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: var(--accent-color, #0077b6);
+  color: #fff;
+  transition: 0.2s ease;
+}
+
+.btn:hover {
+  filter: brightness(1.1);
+}
+
+.btn.delete {
+  background: #d62828;
+}
+
+#journalTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#journalTable th, #journalTable td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  text-align: left;
+}
+
+.selectCol {
+  width: 30px;
+}
+
+#journalTable input[type="checkbox"] {
+  display: none;
+}
+
+.show-checkboxes input[type="checkbox"] {
+  display: inline-block;
+}
+
+
 .modal-content::-webkit-scrollbar-thumb {
   background: rgba(255,255,255,0.2);
   border-radius: 8px;
 }
+
