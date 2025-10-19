@@ -1,3 +1,4 @@
+
 // ===============================
 // synTAX Accounting System Script
 // ===============================
@@ -379,3 +380,468 @@ themeToggle.addEventListener("click", () => {
   themeToggle.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
   localStorage.setItem("theme", isDark ? "dark" : "light");
 });
+
+/* ==========================
+   Account list (no code numbers)
+   ========================== */
+const ACCOUNT_LIST = [
+  // Current Assets
+  "Cash","Petty Cash","Cash in Bank","Accounts Receivable","Notes Receivable",
+  "Allowance for Doubtful Accounts","Inventory","Prepaid Expenses","Short-term Investments","Accrued Income",
+  // Non-current Assets
+  "Land","Building","Accumulated Depreciation – Building","Office Equipment","Accumulated Depreciation – Equipment",
+  "Furniture and Fixtures","Vehicles","Accumulated Depreciation – Vehicles","Goodwill","Patents",
+  // Current Liabilities
+  "Accounts Payable","Notes Payable","Accrued Expenses","Salaries Payable","Interest Payable","Taxes Payable","Unearned Revenue",
+  // Non-current Liabilities
+  "Bonds Payable","Mortgage Payable","Deferred Tax Liabilities","Pension Liabilities",
+  // Owner's Equity
+  "Capital","Drawing","Retained Earnings","Additional Paid-in Capital","Treasury Stock","Revaluation Surplus",
+  // Revenues
+  "Sales","Sales Returns and Allowances","Sales Discounts","Service Revenue","Interest Income","Rent Income","Commission Income","Other Income",
+  // Expenses
+  "Cost of Goods Sold","Salaries and Wages Expense","Rent Expense","Utilities Expense","Supplies Expense","Depreciation Expense",
+  "Insurance Expense","Advertising Expense","Repairs and Maintenance Expense","Delivery Expense","Taxes and Licenses","Miscellaneous Expense",
+  "Purchase","Purchase Returns and Allowances","Purchase Discount","Interest Expense","Loss on Disposal of Assets","Bad Debts Expense"
+];
+
+/* Populate every select.accountSelect available in DOM */
+function populateAccountDropdowns() {
+  const selects = document.querySelectorAll(".accountSelect");
+  selects.forEach(select => {
+    // if already populated (option length > 1) you can clear and repopulate to be sure:
+    select.innerHTML = '<option value="">Select Account</option>';
+    ACCOUNT_LIST.forEach(acc => {
+      const opt = document.createElement("option");
+      opt.value = acc;
+      opt.textContent = acc;
+      select.appendChild(opt);
+    });
+  });
+}
+
+/* Open / close modal */
+function openJournalModal() {
+  populateAccountDropdowns();             // ensure dropdowns are filled
+  const modal = document.getElementById("journalModal");
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden","false");
+}
+function closeJournalModal() {
+  const modal = document.getElementById("journalModal");
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden","true");
+}
+
+/* safe helper to add 1 journal entry row to storage */
+function addJournalEntry(j) {
+  // j expected: { date, description, account, debit, credit, partyType, party }
+  const journals = JSON.parse(localStorage.getItem("journals") || "[]");
+  journals.push(j);
+  localStorage.setItem("journals", JSON.stringify(journals));
+}
+
+/* When the modal form is submitted: read both rows and save */
+document.addEventListener("DOMContentLoaded", () => {
+  populateAccountDropdowns(); // fill on page load too
+
+  const addForm = document.getElementById("addJournalForm");
+  if (!addForm) return;
+
+  addForm.addEventListener("submit", (ev) => {
+    ev.preventDefault();
+
+    const entryType = document.getElementById("entryType").value.trim();
+    const seriesCode = document.getElementById("seriesCode").value.trim();
+    const companyDesc = document.getElementById("companyDesc").value.trim();
+    const postingDate = document.getElementById("postingDate").value;
+
+    const rows = Array.from(document.querySelectorAll("#addJournalTable tbody tr"));
+
+    // We'll collect lines and ensure dual entry (sum debit == sum credit)
+    const lines = [];
+    rows.forEach((tr, idx) => {
+      const account = tr.querySelector(".accountSelect")?.value || "";
+      const partyType = tr.querySelector(".partyType")?.value || "";
+      const party = tr.querySelector(".party")?.value || "";
+      const debit = parseFloat(tr.querySelector(".debit")?.value || 0) || 0;
+      const credit = parseFloat(tr.querySelector(".credit")?.value || 0) || 0;
+
+      if (account) {
+        lines.push({
+          no: idx + 1,
+          account,
+          partyType,
+          party,
+          debit,
+          credit
+        });
+      }
+    });
+
+    if (lines.length < 2) {
+      return alert("Please select accounts for both lines (debit and credit).");
+    }
+
+    // Validate duality: total debits == total credits
+    const totalDebit = lines.reduce((s,l) => s + (l.debit || 0), 0);
+    const totalCredit = lines.reduce((s,l) => s + (l.credit || 0), 0);
+    if (Math.abs(totalDebit - totalCredit) > 0.0001) {
+      return alert("Debits and Credits must be equal. Please correct the amounts.");
+    }
+
+    // Build descriptive header for the journal entry
+    const headerDesc = `${entryType} | ${companyDesc} | ${seriesCode}`;
+
+    // Save each line as a journal record (this format matches prior code patterns)
+    lines.forEach(line => {
+      addJournalEntry({
+        date: postingDate,
+        header: headerDesc,
+        desc: headerDesc,
+        account: line.account,
+        partyType: line.partyType,
+        party: line.party,
+        debit: line.debit || 0,
+        credit: line.credit || 0
+      });
+    });
+
+    // refresh UI pieces (function names shown below — ensure they exist)
+    if (typeof updateJournalTable === "function") updateJournalTable();
+    if (typeof updateLedger === "function") updateLedger();
+    if (typeof generateReports === "function") generateReports();
+
+    closeJournalModal();
+    // optional friendly feedback
+    alert("Journal entry saved.");
+  });
+});
+
+// Save Journal Entry
+popupForm.onsubmit = (e) => {
+  e.preventDefault();
+  
+  const date = document.getElementById("postingDate").value;
+  const type = document.getElementById("entryType").value;
+  const desc = document.getElementById("companyDesc").value;
+  
+  const debitInput = document.querySelector(".debit").value;
+  const creditInput = document.querySelector(".credit").value;
+  const accountSelect = document.querySelector(".accountSelect").value;
+
+  if (!date || !accountSelect) return alert("Please fill all fields.");
+
+  const entry = {
+    date,
+    type,
+    desc,
+    account: accountSelect,
+    debit: parseFloat(debitInput) || 0,
+    credit: parseFloat(creditInput) || 0
+  };
+
+  // Save to localStorage
+  let journals = JSON.parse(localStorage.getItem("journals")) || [];
+  journals.push(entry);
+  localStorage.setItem("journals", JSON.stringify(journals));
+
+ refreshAll();
+entryModal.style.display = "none";
+};
+
+// Populate journal table
+function updateJournalTable() {
+  journalTable.innerHTML = "";
+  const journals = JSON.parse(localStorage.getItem("journals")) || [];
+
+  journals.forEach((j, i) => {
+    const row = `<tr>
+      <td>${j.date}</td>
+      <td>${j.type}</td>
+      <td>${j.desc}</td>
+      <td>${j.debit ? j.account : ""}</td>
+      <td>${j.credit ? j.account : ""}</td>
+      <td>₱${j.debit || j.credit}</td>
+    </tr>`;
+    journalTable.innerHTML += row;
+  });
+}
+
+updateJournalTable();
+
+// ================= LEDGER AUTO-POSTING =================
+
+// Classification map for account → major category + normal balance side
+const accountMap = {
+  // ASSETS
+  "Cash": { category: "Assets", normal: "Debit" },
+  "Petty Cash": { category: "Assets", normal: "Debit" },
+  "Cash in Bank": { category: "Assets", normal: "Debit" },
+  "Accounts Receivable": { category: "Assets", normal: "Debit" },
+  "Inventory": { category: "Assets", normal: "Debit" },
+  "Prepaid Expenses": { category: "Assets", normal: "Debit" },
+
+  // LIABILITIES
+  "Accounts Payable": { category: "Liabilities", normal: "Credit" },
+  "Notes Payable": { category: "Liabilities", normal: "Credit" },
+  "Accrued Expenses": { category: "Liabilities", normal: "Credit" },
+
+  // CAPITAL / EQUITY
+  "Capital": { category: "Capital", normal: "Credit" },
+  "Drawing": { category: "Capital", normal: "Debit" },
+  "Retained Earnings": { category: "Capital", normal: "Credit" },
+
+  // REVENUES
+  "Sales": { category: "Revenues", normal: "Credit" },
+  "Service Revenue": { category: "Revenues", normal: "Credit" },
+  "Rent Income": { category: "Revenues", normal: "Credit" },
+
+  // EXPENSES
+  "Rent Expense": { category: "Expenses", normal: "Debit" },
+  "Salaries Expense": { category: "Expenses", normal: "Debit" },
+  "Utilities Expense": { category: "Expenses", normal: "Debit" },
+  "Supplies Expense": { category: "Expenses", normal: "Debit" }
+};
+
+// Function to compute and display Ledger from Journals
+function updateLedger() {
+  const journals = JSON.parse(localStorage.getItem("journals")) || [];
+  const ledgerDiv = document.getElementById("generalLedger");
+  ledgerDiv.innerHTML = "";
+
+  // Organize ledger entries by account
+  const ledger = {};
+
+  journals.forEach(entry => {
+    const acc = entry.account;
+    if (!ledger[acc]) ledger[acc] = [];
+    ledger[acc].push({
+      date: entry.date,
+      desc: entry.desc,
+      debit: entry.debit,
+      credit: entry.credit
+    });
+  });
+
+  // Render ledgers per major category
+  const categories = ["Assets", "Liabilities", "Capital", "Revenues", "Expenses"];
+  categories.forEach(cat => {
+    const header = document.createElement("h2");
+    header.textContent = cat;
+    ledgerDiv.appendChild(header);
+
+    // Filter accounts belonging to that category
+    Object.keys(ledger).forEach(acc => {
+      if (accountMap[acc]?.category === cat) {
+        const table = document.createElement("table");
+        table.innerHTML = `
+          <thead>
+            <tr><th colspan="4">${acc}</th></tr>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Debit</th>
+              <th>Credit</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot><tr><td colspan="4" class="balance"></td></tr></tfoot>
+        `;
+        const tbody = table.querySelector("tbody");
+        let debitTotal = 0, creditTotal = 0;
+
+        ledger[acc].forEach(e => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${e.date}</td>
+            <td>${e.desc}</td>
+            <td>${e.debit ? "₱" + e.debit.toFixed(2) : ""}</td>
+            <td>${e.credit ? "₱" + e.credit.toFixed(2) : ""}</td>
+          `;
+          tbody.appendChild(row);
+          debitTotal += e.debit || 0;
+          creditTotal += e.credit || 0;
+        });
+
+        // Compute ending balance based on normal side
+        let balance = 0;
+        const normal = accountMap[acc]?.normal || "Debit";
+        if (normal === "Debit") balance = debitTotal - creditTotal;
+        else balance = creditTotal - debitTotal;
+
+        table.querySelector(".balance").textContent =
+          `Balance: ₱${balance.toFixed(2)}`;
+        ledgerDiv.appendChild(table);
+      }
+    });
+  });
+}
+
+// Hook ledger update after adding journal entry
+function refreshAll() {
+  updateJournalTable();
+  updateLedger();
+}
+updateLedger();
+
+// ===================== FINANCIAL STATEMENTS =====================
+
+// Compute balances first
+function getAccountBalances() {
+  const journals = JSON.parse(localStorage.getItem("journals")) || [];
+  const balances = {};
+
+  journals.forEach(e => {
+    if (!balances[e.account]) balances[e.account] = { debit: 0, credit: 0 };
+    balances[e.account].debit += e.debit || 0;
+    balances[e.account].credit += e.credit || 0;
+  });
+
+  const results = {};
+  Object.keys(balances).forEach(acc => {
+    const normal = accountMap[acc]?.normal || "Debit";
+    const bal = (normal === "Debit")
+      ? balances[acc].debit - balances[acc].credit
+      : balances[acc].credit - balances[acc].debit;
+    results[acc] = bal;
+  });
+  return results;
+}
+
+// Generate Trial Balance
+function generateTrialBalance(balances) {
+  const div = document.getElementById("trialBalance");
+  div.innerHTML = "";
+
+  const table = document.createElement("table");
+  table.innerHTML = `
+    <thead>
+      <tr><th>Account</th><th>Debit (₱)</th><th>Credit (₱)</th></tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot><tr><td><b>Total</b></td><td id="tbDebit"></td><td id="tbCredit"></td></tr></tfoot>
+  `;
+
+  let totalDebit = 0, totalCredit = 0;
+  const tbody = table.querySelector("tbody");
+
+  Object.keys(balances).forEach(acc => {
+    const normal = accountMap[acc]?.normal || "Debit";
+    const bal = balances[acc];
+    const row = document.createElement("tr");
+    if (normal === "Debit" && bal >= 0) {
+      row.innerHTML = `<td>${acc}</td><td>${bal.toFixed(2)}</td><td></td>`;
+      totalDebit += bal;
+    } else {
+      row.innerHTML = `<td>${acc}</td><td></td><td>${bal.toFixed(2)}</td>`;
+      totalCredit += bal;
+    }
+    tbody.appendChild(row);
+  });
+
+  table.querySelector("#tbDebit").textContent = totalDebit.toFixed(2);
+  table.querySelector("#tbCredit").textContent = totalCredit.toFixed(2);
+  div.appendChild(table);
+}
+
+// Generate Income Statement
+function generateIncomeStatement(balances) {
+  const div = document.getElementById("incomeStatement");
+  div.innerHTML = "";
+
+  let totalRevenue = 0, totalExpense = 0;
+
+  const revTable = document.createElement("table");
+  revTable.innerHTML = `<thead><tr><th>Revenues</th><th>Amount (₱)</th></tr></thead><tbody></tbody>`;
+  const revBody = revTable.querySelector("tbody");
+
+  const expTable = document.createElement("table");
+  expTable.innerHTML = `<thead><tr><th>Expenses</th><th>Amount (₱)</th></tr></thead><tbody></tbody>`;
+  const expBody = expTable.querySelector("tbody");
+
+  Object.keys(balances).forEach(acc => {
+    const category = accountMap[acc]?.category;
+    const bal = balances[acc];
+    if (category === "Revenues") {
+      totalRevenue += bal;
+      revBody.innerHTML += `<tr><td>${acc}</td><td>${bal.toFixed(2)}</td></tr>`;
+    }
+    if (category === "Expenses") {
+      totalExpense += bal;
+      expBody.innerHTML += `<tr><td>${acc}</td><td>${bal.toFixed(2)}</td></tr>`;
+    }
+  });
+
+  const netIncome = totalRevenue - totalExpense;
+
+  div.appendChild(revTable);
+  div.appendChild(expTable);
+
+  const summary = document.createElement("p");
+  summary.innerHTML = `<b>Net Income:</b> ₱${netIncome.toFixed(2)}`;
+  div.appendChild(summary);
+
+  localStorage.setItem("netIncome", netIncome);
+}
+
+// Generate Balance Sheet
+function generateBalanceSheet(balances) {
+  const div = document.getElementById("balanceSheet");
+  div.innerHTML = "";
+
+  const netIncome = parseFloat(localStorage.getItem("netIncome") || 0);
+
+  const sections = {
+    Assets: [],
+    Liabilities: [],
+    Capital: []
+  };
+
+  Object.keys(balances).forEach(acc => {
+    const cat = accountMap[acc]?.category;
+    if (sections[cat]) sections[cat].push({ acc, bal: balances[acc] });
+  });
+
+  const table = document.createElement("table");
+  const tbody = document.createElement("tbody");
+  table.appendChild(tbody);
+
+  let totalAssets = 0, totalLiabilities = 0, totalCapital = 0;
+
+  tbody.innerHTML += `<tr><th colspan="2">Assets</th></tr>`;
+  sections.Assets.forEach(a => {
+    tbody.innerHTML += `<tr><td>${a.acc}</td><td>${a.bal.toFixed(2)}</td></tr>`;
+    totalAssets += a.bal;
+  });
+
+  tbody.innerHTML += `<tr><th colspan="2">Liabilities</th></tr>`;
+  sections.Liabilities.forEach(a => {
+    tbody.innerHTML += `<tr><td>${a.acc}</td><td>${a.bal.toFixed(2)}</td></tr>`;
+    totalLiabilities += a.bal;
+  });
+
+  tbody.innerHTML += `<tr><th colspan="2">Capital</th></tr>`;
+  sections.Capital.forEach(a => {
+    tbody.innerHTML += `<tr><td>${a.acc}</td><td>${a.bal.toFixed(2)}</td></tr>`;
+    totalCapital += a.bal;
+  });
+
+  tbody.innerHTML += `<tr><td>Net Income</td><td>${netIncome.toFixed(2)}</td></tr>`;
+  totalCapital += netIncome;
+
+  tbody.innerHTML += `
+    <tr><td><b>Total Assets</b></td><td><b>${totalAssets.toFixed(2)}</b></td></tr>
+    <tr><td><b>Total Liabilities + Capital</b></td><td><b>${(totalLiabilities + totalCapital).toFixed(2)}</b></td></tr>
+  `;
+
+  div.appendChild(table);
+}
+
+// Generate all
+function generateReports() {
+  const balances = getAccountBalances();
+  generateTrialBalance(balances);
+  generateIncomeStatement(balances);
+  generateBalanceSheet(balances);
+}

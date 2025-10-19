@@ -103,37 +103,119 @@
       </section>
 
       <!-- ========== JOURNALS ========== -->
-      <section id="journal" class="section">
-        <h1>Journal Entries</h1>
+     <section id="journal" class="section">
+  <h1>Journal Entries</h1>
 
-        <form id="journalForm" class="form">
-          <input type="date" id="jDate" required>
-          <input type="text" id="jDesc" placeholder="Description" required>
-          <input type="text" id="jDebit" placeholder="Debit Account" required>
-          <input type="text" id="jCredit" placeholder="Credit Account" required>
-          <input type="number" id="jAmount" placeholder="Amount" required>
-          <button type="submit">Add Entry</button>
-        </form>
+  <div class="toolbar">
+    <button id="addEntryBtn">➕ Add Entry</button>
+    <button id="deleteEntryBtn">🗑️ Delete Entry</button>
+  </div>
 
-        <div class="toolbar">
-          <button id="undoBtn">Undo</button>
-          <button id="redoBtn">Redo</button>
-        </div>
+  <table id="journalTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Entry Type</th>
+        <th>Description</th>
+        <th>Debit</th>
+        <th>Credit</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-        <table id="journalTable">
+  <!-- Popup Modal for Adding Entry -->
+  <div id="entryModal" class="modal">
+    <div class="modal-content glassy">
+      <span class="close">&times;</span>
+      <h2>Add Journal Entry</h2>
+
+      <form id="popupForm">
+        <label>Entry Type:</label>
+        <input type="text" id="entryType" required>
+
+        <label>Series Code:</label>
+        <input type="text" id="seriesCode" required>
+
+        <label>Company / Description:</label>
+        <input type="text" id="companyDesc" required>
+
+        <label>Posting Date:</label>
+        <input type="date" id="postingDate" required>
+
+        <table class="popup-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Description</th>
+              <th>No.</th>
+              <th>Account</th>
+              <th>Party Type</th>
+              <th>Party</th>
               <th>Debit</th>
               <th>Credit</th>
-              <th>Amount</th>
-              <th>Actions</th>
+              <th></th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>
+                <select class="accountSelect">
+                  <option disabled selected>Select Account</option>
+                  <optgroup label="Assets">
+                    <option>Cash</option>
+                    <option>Petty Cash</option>
+                    <option>Cash in Bank</option>
+                    <option>Accounts Receivable</option>
+                    <option>Inventory</option>
+                    <option>Prepaid Expenses</option>
+                  </optgroup>
+                  <optgroup label="Liabilities">
+                    <option>Accounts Payable</option>
+                    <option>Notes Payable</option>
+                    <option>Accrued Expenses</option>
+                  </optgroup>
+                  <optgroup label="Capital">
+                    <option>Capital</option>
+                    <option>Drawing</option>
+                    <option>Retained Earnings</option>
+                  </optgroup>
+                  <optgroup label="Revenues">
+                    <option>Sales</option>
+                    <option>Service Revenue</option>
+                    <option>Rent Income</option>
+                  </optgroup>
+                  <optgroup label="Expenses">
+                    <option>Rent Expense</option>
+                    <option>Salaries Expense</option>
+                    <option>Utilities Expense</option>
+                    <option>Supplies Expense</option>
+                  </optgroup>
+                </select>
+              </td>
+              <td><input type="text" placeholder="Type"></td>
+              <td><input type="text" placeholder="Party"></td>
+              <td><input type="number" class="debit" placeholder="₱"></td>
+              <td><input type="number" class="credit" placeholder="₱"></td>
+              <td><button type="button" class="editBtn">✏️</button></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><select class="accountSelect">[same options]</select></td>
+              <td><input type="text" placeholder="Type"></td>
+              <td><input type="text" placeholder="Party"></td>
+               <td><input type="number" class="debit" placeholder="₱"></td>
+              <td><input type="number" class="credit" placeholder="₱"></td>
+              <td><button type="button" class="editBtn">✏️</button></td>
+            </tr>
+          </tbody>
         </table>
-      </section>
+
+        <button type="submit" class="saveBtn">💾 Save Entry</button>
+      </form>
+    </div>
+  </div>
+</section>
 
       <!-- ========== LEDGERS ========== -->
       <section id="ledger" class="section">
@@ -202,23 +284,19 @@
         <div class="settings-container">
           <button onclick="backupData()">Backup Data</button>
           <button onclick="restoreData()">Restore Data</button>
-          <button onclick="localStorage.clear(); location.reload()">Reset All Data</button>
-         <div class="theme-toggle">
-            <label><input type="checkbox" id="themeSwitch"> Dark Mode</label>
-          </div>
+          <button onclick="localStorage.clear(); location.reload()">Reset All    Data</button>
+          <button id="toggleTheme">🌙 Dark Mode</button>
+
         </div>
       </section>
 
     </main>
   </div>
 
-<button id="toggleTheme">🌙 Dark Mode</button>
-
   <!-- JS -->
   <script src="app.js"></script>
 </body>
 </html>
-
 
 
 
